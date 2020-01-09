@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAc
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
+import requests  
+import json
+
 class App(QMainWindow):
 
     def __init__(self):
@@ -14,6 +17,9 @@ class App(QMainWindow):
         self.height = 140
         self.initUI()
         self.tasks = {}
+
+        tokenFile = open("token.txt", "r")
+        self.token = tokenFile.readline().strip('\n')
     
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -62,22 +68,34 @@ class App(QMainWindow):
         if task in self.tasks:
             print(task, " task has already been uploaded")
         else:
-            categories = os.listdir(folder+"/"+task)
-            categories.remove(".DS_Store")
+            boolGroups = os.listdir(folder+"/"+task)
+            boolGroups.remove(".DS_Store")
             features = {"folder":folder}
-            for category in categories:
-                features[category] = []
+            for group in boolGroups:
+                features[group] = []
 
             self.tasks[task] = features
-            for category in categories:
-                self.addImages(folder, task, category)
+            for group in boolGroups:
+                self.addImages(folder, task, group)
         #print(self.tasks)
 
     
-    def addImages(self,folder,task, category):
-        images = os.listdir(folder+"/"+task+"/"+category)
+    def addImages(self,folder,task, group):
+        dataFolder = os.path.join(folder, task, group)
+        images = os.listdir(dataFolder)
+        url = "http://127.0.0.1:8000/practice"
         for image in images:
-            self.tasks[task][category].append(image)
+            self.tasks[task][group].append(image)
+            data = {'category':task, 'in_category':group, 'token':self.token}
+            f = open(os.path.join(dataFolder,image), 'rb')
+            files = {
+                    'photo': f,
+                    #'Content-Type': 'image/jpeg' # commenting out did nothing
+                }
+            r=requests.post(url, data=data , files=files)
+            got_response = r.text
+            print(got_response)
+            print(r.status_code)
 
     def testDirPrint(self, folder):
         for dirpath, dirnames, filenames in os.walk(folder):
