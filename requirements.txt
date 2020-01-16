@@ -1,6 +1,6 @@
 altgraph==0.16.1
 fbs==0.8.4
 macholib==1.11
-PyInstaller==3.5
+PyInstaller>=3.6
 PyQt5==5.13.1
 PyQt5-sip==12.7.0
